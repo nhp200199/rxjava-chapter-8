@@ -18,6 +18,8 @@ public class GameGridViewModel {
     private BehaviorSubject<GameState> gameState;
     private Observable<GridPosition> gridPositionObservable;
     private Observable<GameSymbol> playerInTurnObservable;
+    private Observable<GameStatus> gameStatusObservable;
+    private Observable<String> winner;
 
     public GameGridViewModel(Observable<GridPosition> gridPositionObservable) {
         GameGrid emptyGameGrid = new GameGrid(3, 3);
@@ -32,6 +34,11 @@ public class GameGridViewModel {
             else
                 return GameSymbol.CIRCLE;
         });
+
+        gameStatusObservable = gameState
+                .map(GameUtils::calculateGameStatus);
+
+        winner = gameStatusObservable.map(a -> a.isEnded() ? "Winner is: " + a.getWinner() : "");
     }
 
     public void subscribe() {
@@ -39,8 +46,14 @@ public class GameGridViewModel {
                 gameInfoObservable = Observable.combineLatest(
                 gameState, playerInTurnObservable, Pair::new);
 
+        Observable<GridPosition> gameNotEndedTouches =
+                gridPositionObservable
+                        .withLatestFrom(gameStatusObservable, Pair::new)
+                        .filter(pair -> !pair.second.isEnded())
+                        .map(pair -> pair.first);
+
         Observable<GridPosition> filteredTouchesEventObservable =
-                gridPositionObservable.withLatestFrom(gameState,
+                gameNotEndedTouches.withLatestFrom(gameState,
                         Pair::new)
                 .filter(a -> a.second.isEmpty(a.first))
                 .map(b -> b.first);
@@ -67,5 +80,13 @@ public class GameGridViewModel {
 
     public Observable<GameSymbol> getPlayerInTurnObservable() {
         return playerInTurnObservable;
+    }
+
+    public Observable<GameStatus> getGameStatusObservable() {
+        return gameStatusObservable;
+    }
+
+    public Observable<String> getWinner() {
+        return winner;
     }
 }
