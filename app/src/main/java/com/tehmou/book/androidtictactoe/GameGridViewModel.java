@@ -20,13 +20,15 @@ public class GameGridViewModel {
     private Observable<GameSymbol> playerInTurnObservable;
     private Observable<GameStatus> gameStatusObservable;
     private Observable<String> winner;
+    private Observable<Object> resetGameEventObservable;
 
-    public GameGridViewModel(Observable<GridPosition> gridPositionObservable) {
+    public GameGridViewModel(Observable<GridPosition> gridPositionObservable, Observable<Object> resetGameEvent) {
         GameGrid emptyGameGrid = new GameGrid(3, 3);
         GameState emptyGameState = new GameState(emptyGameGrid, GameSymbol.EMPTY);
         gameState = BehaviorSubject.createDefault(emptyGameState);
         compositeDisposable = new CompositeDisposable();
         this.gridPositionObservable = gridPositionObservable;
+        this.resetGameEventObservable = resetGameEvent;
         playerInTurnObservable = gameState.map(GameState::getLastPlayedSymbol)
         .map(lastSymbol -> {
             if (lastSymbol == GameSymbol.CIRCLE)
@@ -57,6 +59,15 @@ public class GameGridViewModel {
                         Pair::new)
                 .filter(a -> a.second.isEmpty(a.first))
                 .map(b -> b.first);
+
+        compositeDisposable.add(
+                resetGameEventObservable.map(e -> {
+                    GameGrid emptyGameGrid = new GameGrid(3, 3);
+                    GameState emptyGameState = new GameState(emptyGameGrid, GameSymbol.EMPTY);
+                    return emptyGameState;
+                })
+                .subscribe(gameState::onNext)
+        );
 
         compositeDisposable.add(
                 filteredTouchesEventObservable

@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
@@ -26,6 +27,7 @@ public class MainActivity extends AppCompatActivity {
     private PlayerView mPlayerView;
     private TextView mTvWinner;
     private FrameLayout mWinnerView;
+    private Button mBtnResetGame;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,8 +40,9 @@ public class MainActivity extends AppCompatActivity {
         mPlayerView = (PlayerView) findViewById(R.id.player_in_turn_image_view);
         mTvWinner = (TextView) findViewById(R.id.winner_text_view);
         mWinnerView = (FrameLayout) findViewById(R.id.winner_view);
+        mBtnResetGame = (Button) findViewById(R.id.new_game_button);
 
-        viewModel = new GameGridViewModel(mGameGridView.getTouchesOnGrid());
+        viewModel = new GameGridViewModel(mGameGridView.getTouchesOnGrid(), RxView.clicks(mBtnResetGame));
         viewModel.subscribe();
     }
 
