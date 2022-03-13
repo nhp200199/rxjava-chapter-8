@@ -4,6 +4,7 @@ import android.util.Pair;
 
 import com.tehmou.book.androidtictactoe.pojo.GameGrid;
 import com.tehmou.book.androidtictactoe.pojo.GameState;
+import com.tehmou.book.androidtictactoe.pojo.GameStatus;
 import com.tehmou.book.androidtictactoe.pojo.GameSymbol;
 import com.tehmou.book.androidtictactoe.pojo.GridPosition;
 
@@ -38,8 +39,14 @@ public class GameGridViewModel {
                 gameInfoObservable = Observable.combineLatest(
                 gameState, playerInTurnObservable, Pair::new);
 
+        Observable<GridPosition> filteredTouchesEventObservable =
+                gridPositionObservable.withLatestFrom(gameState,
+                        Pair::new)
+                .filter(a -> a.second.isEmpty(a.first))
+                .map(b -> b.first);
+
         compositeDisposable.add(
-                gridPositionObservable
+                filteredTouchesEventObservable
                         .withLatestFrom(
                                 gameInfoObservable,
                                 (gridPosition, gameInfo) ->
