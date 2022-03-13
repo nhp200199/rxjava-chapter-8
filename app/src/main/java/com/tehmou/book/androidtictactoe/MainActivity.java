@@ -24,6 +24,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         InteractiveGameGridView gameGridView = (InteractiveGameGridView) findViewById(R.id.grid_view);
+        PlayerView playerView = (PlayerView) findViewById(R.id.player_in_turn_image_view);
 
         viewModel = new GameGridViewModel(gameGridView.getTouchesOnGrid());
         viewModel.subscribe();
@@ -31,6 +32,10 @@ public class MainActivity extends AppCompatActivity {
         viewModel.getGameGridViewObservable()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(gameGridView::setData);
+
+        viewModel.getPlayerInTurnObservable()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(playerView::setData);
     }
 
     @Override
