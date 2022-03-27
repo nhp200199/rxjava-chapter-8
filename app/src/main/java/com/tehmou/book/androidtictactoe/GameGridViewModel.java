@@ -56,11 +56,33 @@ public class GameGridViewModel {
                         .filter(pair -> !pair.second.isEnded())
                         .map(pair -> pair.first);
 
+        Observable<GridPosition> droppedTouchesGridPosition =
+                gameNotEndedTouches
+                        .withLatestFrom(gameState, Pair::new)
+                        .map(pair -> {
+                            GridPosition position = pair.first;
+                            GameGrid gameGrid = pair.second.getGameGrid();
+
+                            int i = gameGrid.getHeight() - 1;
+                            for (; i >= -1; i--) {
+                                if (i == -1) {
+                                // Let -1 fall through
+                                    break;
+                                }
+                                GameSymbol symbol =
+                                        gameGrid.getSymbolAt(
+                                                position.getX(), i);
+                                if (symbol == GameSymbol.EMPTY) {
+                                    break;
+                                }
+                            }
+                            return new GridPosition(
+                                    position.getX(), i);
+                        });
+
         Observable<GridPosition> filteredTouchesEventObservable =
-                gameNotEndedTouches.withLatestFrom(gameState,
-                        Pair::new)
-                .filter(a -> a.second.isEmpty(a.first))
-                .map(b -> b.first);
+                droppedTouchesGridPosition
+                .filter(a -> a.getY() >= 0);
 
         compositeDisposable.add(
                 resetGameEventObservable.map(e -> {
