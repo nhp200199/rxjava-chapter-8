@@ -13,6 +13,8 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.subjects.BehaviorSubject;
 
 public class GameGridViewModel {
+    public static final int GRID_WIDTH = 7;
+    public static final int GRID_HEIGHT = 7;
 
     private CompositeDisposable compositeDisposable;
     private BehaviorSubject<GameState> gameState;
@@ -23,7 +25,7 @@ public class GameGridViewModel {
     private Observable<Object> resetGameEventObservable;
 
     public GameGridViewModel(Observable<GridPosition> gridPositionObservable, Observable<Object> resetGameEvent) {
-        GameGrid emptyGameGrid = new GameGrid(3, 3);
+        GameGrid emptyGameGrid = new GameGrid(GRID_WIDTH, GRID_HEIGHT);
         GameState emptyGameState = new GameState(emptyGameGrid, GameSymbol.EMPTY);
         gameState = BehaviorSubject.createDefault(emptyGameState);
         compositeDisposable = new CompositeDisposable();
@@ -31,10 +33,10 @@ public class GameGridViewModel {
         this.resetGameEventObservable = resetGameEvent;
         playerInTurnObservable = gameState.map(GameState::getLastPlayedSymbol)
         .map(lastSymbol -> {
-            if (lastSymbol == GameSymbol.CIRCLE)
-                return GameSymbol.CROSS;
+            if (lastSymbol == GameSymbol.RED)
+                return GameSymbol.BLACK;
             else
-                return GameSymbol.CIRCLE;
+                return GameSymbol.RED;
         });
 
         gameStatusObservable = gameState
@@ -62,7 +64,7 @@ public class GameGridViewModel {
 
         compositeDisposable.add(
                 resetGameEventObservable.map(e -> {
-                    GameGrid emptyGameGrid = new GameGrid(3, 3);
+                    GameGrid emptyGameGrid = new GameGrid(GRID_WIDTH, GRID_HEIGHT);
                     GameState emptyGameState = new GameState(emptyGameGrid, GameSymbol.EMPTY);
                     return emptyGameState;
                 })
