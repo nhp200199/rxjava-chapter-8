@@ -2,6 +2,7 @@ package com.tehmou.book.androidtictactoe;
 
 import android.util.Pair;
 
+import com.tehmou.book.androidtictactoe.data.GameModel;
 import com.tehmou.book.androidtictactoe.pojo.GameGrid;
 import com.tehmou.book.androidtictactoe.pojo.GameState;
 import com.tehmou.book.androidtictactoe.pojo.GameStatus;
@@ -17,29 +18,34 @@ public class GameGridViewModel {
     public static final int GRID_HEIGHT = 7;
 
     private CompositeDisposable compositeDisposable;
-    private BehaviorSubject<GameState> gameState;
     private Observable<GridPosition> gridPositionObservable;
     private Observable<GameSymbol> playerInTurnObservable;
     private Observable<GameStatus> gameStatusObservable;
     private Observable<String> winner;
     private Observable<Object> resetGameEventObservable;
+    private Observable<Object> saveGameEventObservable;
+    private GameModel gameModel;
 
-    public GameGridViewModel(Observable<GridPosition> gridPositionObservable, Observable<Object> resetGameEvent) {
-        GameGrid emptyGameGrid = new GameGrid(GRID_WIDTH, GRID_HEIGHT);
-        GameState emptyGameState = new GameState(emptyGameGrid, GameSymbol.EMPTY);
-        gameState = BehaviorSubject.createDefault(emptyGameState);
+    public GameGridViewModel(GameModel gameModel,
+                             Observable<GridPosition> gridPositionObservable,
+                             Observable<Object> resetGameEvent,
+                             Observable<Object> saveGameEvent) {
+        this.gameModel = gameModel;
         compositeDisposable = new CompositeDisposable();
         this.gridPositionObservable = gridPositionObservable;
         this.resetGameEventObservable = resetGameEvent;
-        playerInTurnObservable = gameState.map(GameState::getLastPlayedSymbol)
-        .map(lastSymbol -> {
-            if (lastSymbol == GameSymbol.RED)
-                return GameSymbol.BLACK;
-            else
-                return GameSymbol.RED;
-        });
+        this.saveGameEventObservable = saveGameEvent;
+        playerInTurnObservable = gameModel.getActiveGameState()
+                .map(GameState::getLastPlayedSymbol)
+                .map(lastSymbol -> {
+                    if (lastSymbol == GameSymbol.RED)
+                        return GameSymbol.BLACK;
+                    else
+                        return GameSymbol.RED;
+                });
 
-        gameStatusObservable = gameState
+
+        gameStatusObservable = gameModel.getActiveGameState()
                 .map(GameUtils::calculateGameStatus);
 
         winner = gameStatusObservable.map(a -> a.isEnded() ? "Winner is: " + a.getWinner() : "");
@@ -48,7 +54,7 @@ public class GameGridViewModel {
     public void subscribe() {
         Observable<Pair<GameState, GameSymbol>>
                 gameInfoObservable = Observable.combineLatest(
-                gameState, playerInTurnObservable, Pair::new);
+                gameModel.getActiveGameState(), playerInTurnObservable, Pair::new);
 
         Observable<GridPosition> gameNotEndedTouches =
                 gridPositionObservable
@@ -58,7 +64,7 @@ public class GameGridViewModel {
 
         Observable<GridPosition> droppedTouchesGridPosition =
                 gameNotEndedTouches
-                        .withLatestFrom(gameState, Pair::new)
+                        .withLatestFrom(gameModel.getActiveGameState(), Pair::new)
                         .map(pair -> {
                             GridPosition position = pair.first;
                             GameGrid gameGrid = pair.second.getGameGrid();
@@ -66,7 +72,7 @@ public class GameGridViewModel {
                             int i = gameGrid.getHeight() - 1;
                             for (; i >= -1; i--) {
                                 if (i == -1) {
-                                // Let -1 fall through
+                                    // Let -1 fall through
                                     break;
                                 }
                                 GameSymbol symbol =
@@ -82,15 +88,16 @@ public class GameGridViewModel {
 
         Observable<GridPosition> filteredTouchesEventObservable =
                 droppedTouchesGridPosition
-                .filter(a -> a.getY() >= 0);
+                        .filter(a -> a.getY() >= 0);
 
         compositeDisposable.add(
-                resetGameEventObservable.map(e -> {
-                    GameGrid emptyGameGrid = new GameGrid(GRID_WIDTH, GRID_HEIGHT);
-                    GameState emptyGameState = new GameState(emptyGameGrid, GameSymbol.EMPTY);
-                    return emptyGameState;
-                })
-                .subscribe(gameState::onNext)
+                resetGameEventObservable
+                        .subscribe(gameState -> gameModel.newGame())
+        );
+
+        compositeDisposable.add(
+                saveGameEventObservable
+                        .subscribe(e -> gameModel.saveActiveGame())
         );
 
         compositeDisposable.add(
@@ -101,7 +108,7 @@ public class GameGridViewModel {
                                         gameInfo.first.setSymbolAt(
                                                 gridPosition, gameInfo.second)
                         )
-                        .subscribe(gameState::onNext)
+                        .subscribe(gameState -> gameModel.putActiveGameState(gameState))
         );
     }
 
@@ -110,7 +117,7 @@ public class GameGridViewModel {
     }
 
     public Observable<GameGrid> getGameGridViewObservable() {
-        return gameState.map(GameState::getGameGrid);
+        return gameModel.getActiveGameState().map(GameState::getGameGrid);
     }
 
     public Observable<GameSymbol> getPlayerInTurnObservable() {

@@ -10,6 +10,7 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import com.jakewharton.rxbinding2.view.RxView;
+import com.tehmou.book.androidtictactoe.data.GameModel;
 import com.tehmou.book.androidtictactoe.pojo.GameGrid;
 import com.tehmou.book.androidtictactoe.pojo.GameSymbol;
 import com.tehmou.book.androidtictactoe.pojo.GridPosition;
@@ -28,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView mTvWinner;
     private FrameLayout mWinnerView;
     private Button mBtnResetGame;
+    private Button btnSaveGame;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,8 +43,13 @@ public class MainActivity extends AppCompatActivity {
         mTvWinner = (TextView) findViewById(R.id.winner_text_view);
         mWinnerView = (FrameLayout) findViewById(R.id.winner_view);
         mBtnResetGame = (Button) findViewById(R.id.new_game_button);
+        btnSaveGame = (Button) findViewById(R.id.btn_save_game);
 
-        viewModel = new GameGridViewModel(mGameGridView.getTouchesOnGrid(), RxView.clicks(mBtnResetGame));
+        GameModel gameModel = new GameModel(this);
+        viewModel = new GameGridViewModel(gameModel,
+                mGameGridView.getTouchesOnGrid(),
+                RxView.clicks(mBtnResetGame),
+                RxView.clicks(btnSaveGame));
         viewModel.subscribe();
     }
 
