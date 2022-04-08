@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import com.tehmou.book.androidtictactoe.pojo.GameGrid;
 import com.tehmou.book.androidtictactoe.pojo.GameState;
 import com.tehmou.book.androidtictactoe.pojo.GameSymbol;
+import com.tehmou.book.androidtictactoe.pojo.SavedGame;
 
 import java.util.List;
 
@@ -43,4 +44,9 @@ public class GameModel {
     public Observable<Void> saveActiveGame() {
         return gameStore.put(activeGameState.getValue());
     }
+
+    public Observable<List<SavedGame>> getSavedGamesStream() {
+        return gameStore.getSavedGamesStream();
+    }
+
 }

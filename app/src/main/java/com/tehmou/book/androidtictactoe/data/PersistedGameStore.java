@@ -4,6 +4,8 @@ import android.content.SharedPreferences;
 import android.util.Log;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.reflect.TypeToken;
 import com.tehmou.book.androidtictactoe.pojo.GameState;
 import com.tehmou.book.androidtictactoe.pojo.SavedGame;
 
@@ -25,6 +27,13 @@ public class PersistedGameStore {
 
     public PersistedGameStore(SharedPreferences sharedPreferences) {
         this.sharedPreferences = sharedPreferences;
+        String gamesJson = sharedPreferences.getString("saved_games", "[]");
+        try {
+            savedGames = gson.fromJson(gamesJson, new TypeToken<List<SavedGame>>(){}.getType());
+            Log.d(TAG, "Loaded " + savedGames.size() + " games");
+        } catch (JsonSyntaxException e) {
+            Log.d(TAG, "Failed to load games");
+        }
     }
 
     public Observable<List<SavedGame>> getSavedGamesStream() {

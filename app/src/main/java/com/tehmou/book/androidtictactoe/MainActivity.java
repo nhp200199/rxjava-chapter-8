@@ -1,5 +1,6 @@
 package com.tehmou.book.androidtictactoe;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -11,6 +12,7 @@ import android.widget.TextView;
 
 import com.jakewharton.rxbinding2.view.RxView;
 import com.tehmou.book.androidtictactoe.data.GameModel;
+import com.tehmou.book.androidtictactoe.load.LoadGameActivity;
 import com.tehmou.book.androidtictactoe.pojo.GameGrid;
 import com.tehmou.book.androidtictactoe.pojo.GameSymbol;
 import com.tehmou.book.androidtictactoe.pojo.GridPosition;
@@ -44,8 +46,13 @@ public class MainActivity extends AppCompatActivity {
         mWinnerView = (FrameLayout) findViewById(R.id.winner_view);
         mBtnResetGame = (Button) findViewById(R.id.new_game_button);
         btnSaveGame = (Button) findViewById(R.id.btn_save_game);
+        Button btnLoadgame = (Button) findViewById(R.id.btn_load_game);
 
-        GameModel gameModel = new GameModel(this);
+        btnLoadgame.setOnClickListener(v -> {
+            startActivity(new Intent(MainActivity.this, LoadGameActivity.class));
+        });
+
+        GameModel gameModel = ((GameApplication) getApplication()).getGameModel();
         viewModel = new GameGridViewModel(gameModel,
                 mGameGridView.getTouchesOnGrid(),
                 RxView.clicks(mBtnResetGame),
